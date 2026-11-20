@@ -87,8 +87,10 @@ function initBirthday(){
 
 function applyTripProgress(){
   const events=Array.from(document.querySelectorAll('[data-day="01"] .event'));
-  events.slice(0,3).forEach(event=>{event.classList.add('trip-completed');const tag=event.querySelector('.tag');if(tag){tag.className='tag good';tag.textContent='완료';}});
+  events.forEach(event=>{event.classList.add('trip-completed');const tag=event.querySelector('.tag');if(tag){tag.className='tag good';tag.textContent='완료';}});
   const lunch=events[2];if(lunch){const detail=lunch.querySelector('p');if(detail)detail.textContent='라멘 점심 완료. 맛있게 먹었습니다.';lunch.querySelectorAll('a').forEach(a=>a.remove());}
+  const completedDetails={3:'삿포로 이동 완료.',4:'승강장 도착 및 탑승 준비 완료.',5:'카파라이너 탑승 및 조잔케이 도착 완료.',6:'료칸 체크인 완료. 온천과 휴식까지 오늘 일정 완료.',7:'가이세키 저녁 식사 완료.'};
+  Object.entries(completedDetails).forEach(([index,text])=>{const detail=events[Number(index)]?.querySelector('p');if(detail)detail.textContent=text;});
 }
 
 let busy=false;const dec=new TextDecoder();const bytes=s=>Uint8Array.from(atob(s),c=>c.charCodeAt(0));document.getElementById('unlockForm').addEventListener('submit',async e=>{e.preventDefault();if(busy)return;busy=true;const error=document.getElementById('error'),field=document.getElementById('password'),button=e.submitter;error.textContent='';button.disabled=true;try{if(!encrypted||!crypto.subtle)throw new Error('not-ready');const material=await crypto.subtle.importKey('raw',new TextEncoder().encode(field.value),'PBKDF2',false,['deriveKey']);const key=await crypto.subtle.deriveKey({name:'PBKDF2',salt:bytes(encrypted.salt),iterations:encrypted.iterations,hash:'SHA-256'},material,{name:'AES-GCM',length:256},false,['decrypt']);const plain=await crypto.subtle.decrypt({name:'AES-GCM',iv:bytes(encrypted.iv)},key,bytes(encrypted.data));field.value='';document.getElementById('app').innerHTML=dec.decode(plain);document.title=document.querySelector('#app h1')?.textContent||'일본여행 일정표';upgradeTrip();applyTripProgress();mountBirthday();initTrip();window.northFX.refresh();window.scrollTo(0,0);initBirthday();}catch(err){error.textContent=crypto.subtle?'비밀번호가 맞지 않아요. 다시 확인해 주세요.':'안전한 HTTPS 주소에서 다시 열어 주세요.';field.value='';field.focus();}finally{busy=false;if(button.isConnected)button.disabled=false;}});</script></body></html>
